@@ -1,0 +1,20 @@
+{
+    "groups": {
+        "group:ctf-pi-ssh": [
+            "kapalit@github",
+            "thomsonmi11@gmail.com",
+            "ahmedsomaan7@gmail.com"
+        ]
+    },
+    "tagOwners": {
+        "tag:ctf-pi": ["autogroup:admin"]
+    },
+    "ssh": [
+        {
+            "action": "accept",
+            "src":    ["group:ctf-pi-ssh"],
+            "dst":    ["tag:ctf-pi"],
+            "users":  ["autogroup:nonroot", "root"]
+        }
+    ]
+}
