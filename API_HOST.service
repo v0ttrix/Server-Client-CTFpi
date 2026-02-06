@@ -1,0 +1,27 @@
+# this file tells the operating system to treat it similar to daemon, and to always
+# run it in the background, if it fails to auto restart it, and where to log files
+# and security configurations
+
+[Unit]
+# used when running systemCTL commands
+Description=CTF Pi Server
+# not a hard rule, but it will request the network driver to return an OK response /
+# turn on before it tries to run
+# if the network driver doesnt respond, it will run anyways
+After=network.target
+
+[Service]
+# execution path of the server
+ExecStart=/usr/bin/python3 /home/v0ttrix/Documents/Project IV Mobile and Networked Environments/Server-Cient-CTFpi/Backend/autostart_service.py
+# the directory which should be considered 'root'
+WorkingDirectory=/home/v0ttrix/Documents/Project IV Mobile and Networked Environments/Server-Cient-CTFpi
+
+# always restart if not running or failed
+Restart=always
+# give 5 seconds after a failure or it not being on as to not DOS the OS
+RestartSec=5
+User=v0ttrix
+Group=v0ttrix
+
+[Install]
+WantedBy=multi-user.target
