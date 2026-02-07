@@ -1,6 +1,6 @@
 Backend:
-- **C Server** (server.c) - Low-level HTTP server serving static files from ./build
-  - Handles CTF challenges with struct-based data model
+- **C++ Server** (server.cpp) - OOP-based HTTP server serving static files from ./build
+  - Handles CTF challenges with class-based data model
   - support for HTML/CSS/JS/images
   - Custom protocol for CTF challenges
  
