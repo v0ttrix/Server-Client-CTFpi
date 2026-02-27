@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Challenges from "./pages/Challenges";
 import Header from "./components/Header";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
