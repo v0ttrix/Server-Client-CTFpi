@@ -1,6 +1,7 @@
 # Environment variables
 .env
 .env.local
+db_config.json
 
 # Python
 __pycache__/
