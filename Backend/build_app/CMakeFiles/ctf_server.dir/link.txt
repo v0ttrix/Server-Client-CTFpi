@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/ctf_server.dir/link.d CMakeFiles/ctf_server.dir/server.cpp.o -o bin/ctf_server  /usr/lib64/libpq.so

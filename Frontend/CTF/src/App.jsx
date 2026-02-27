@@ -2,19 +2,32 @@ import "./App.css";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Challenges from "./pages/Challenges";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 import Header from "./components/Header";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
   return (
     <>
       <BrowserRouter>
-        <Header />
         <Routes>
-          <Route path="*" element={<Home />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="*"
+            element={
+              <>
+                <Header />
+                <Routes>
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/challenges" element={<Challenges />} />
+                </Routes>
+              </>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </>

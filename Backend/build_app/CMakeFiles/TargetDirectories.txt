@@ -1,0 +1,3 @@
+/home/v0ttrix/Repo/Server-Client-CTFpi/Backend/build_app/CMakeFiles/ctf_server.dir
+/home/v0ttrix/Repo/Server-Client-CTFpi/Backend/build_app/CMakeFiles/edit_cache.dir
+/home/v0ttrix/Repo/Server-Client-CTFpi/Backend/build_app/CMakeFiles/rebuild_cache.dir

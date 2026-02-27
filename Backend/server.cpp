@@ -9,13 +9,184 @@
 #include <cstring>
 #include <sstream>
 #include <map>
+#include <vector>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <libpq-fe.h>
 
 namespace
 {
+    using json = nlohmann::json;
+    
     constexpr int kInvalidSocket = -1;
     constexpr int kSocketError = -1;
     constexpr size_t kBufferSize = 8192;
     constexpr const char* kWebRoot = "./build";
+    
+    class ConfigManager
+    {
+    public:
+        static ConfigManager& getInstance()
+        {
+            static ConfigManager instance;
+            return instance;
+        }
+        
+        bool loadConfig(const std::string& configPath)
+        {
+            try
+            {
+                std::ifstream file(configPath);
+                if (!file.is_open())
+                {
+                    std::cerr << "Failed to open config file: " << configPath << "\n";
+                    return false;
+                }
+                config_ = json::parse(file);
+                return true;
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Config parse error: " << e.what() << "\n";
+                return false;
+            }
+        }
+        
+        std::string getString(const std::string& path) const
+        {
+            try
+            {
+                auto parts = parsePath(path);
+                json current = config_;
+                for (const auto& part : parts)
+                {
+                    current = current[part];
+                }
+                return current.get<std::string>();
+            }
+            catch (...)
+            {
+                return "";
+            }
+        }
+        
+        int getInt(const std::string& path) const
+        {
+            try
+            {
+                auto parts = parsePath(path);
+                json current = config_;
+                for (const auto& part : parts)
+                {
+                    current = current[part];
+                }
+                return current.get<int>();
+            }
+            catch (...)
+            {
+                return 0;
+            }
+        }
+        
+    private:
+        ConfigManager() = default;
+        
+        std::vector<std::string> parsePath(const std::string& path) const
+        {
+            std::vector<std::string> parts;
+            std::istringstream iss(path);
+            std::string part;
+            while (std::getline(iss, part, '.'))
+            {
+                parts.push_back(part);
+            }
+            return parts;
+        }
+        
+        json config_;
+    };
+    
+    class DatabaseManager
+    {
+    public:
+        static DatabaseManager& getInstance()
+        {
+            static DatabaseManager instance;
+            return instance;
+        }
+        
+        bool connect()
+        {
+            auto& config = ConfigManager::getInstance();
+            std::string connStr = "host=" + config.getString("database.host") +
+                                 " port=" + std::to_string(config.getInt("database.port")) +
+                                 " user=" + config.getString("database.user") +
+                                 " password=" + config.getString("database.password") +
+                                 " dbname=" + config.getString("database.dbname");
+            
+            conn_ = PQconnectdb(connStr.c_str());
+            
+            if (PQstatus(conn_) != CONNECTION_OK)
+            {
+                std::cerr << "Database connection failed: " << PQerrorMessage(conn_) << "\n";
+                PQfinish(conn_);
+                conn_ = nullptr;
+                return false;
+            }
+            
+            std::cout << "Connected to PostgreSQL database\n";
+            return true;
+        }
+        
+        json query(const std::string& sql) const
+        {
+            if (!conn_)
+            {
+                return json{{"error", "No database connection"}};
+            }
+            
+            PGresult* res = PQexec(conn_, sql.c_str());
+            
+            if (PQresultStatus(res) != PGRES_TUPLES_OK && 
+                PQresultStatus(res) != PGRES_COMMAND_OK)
+            {
+                std::string error = PQerrorMessage(conn_);
+                PQclear(res);
+                return json{{"error", error}};
+            }
+            
+            json result = json::array();
+            int rows = PQntuples(res);
+            int cols = PQnfields(res);
+            
+            for (int i = 0; i < rows; ++i)
+            {
+                json row;
+                for (int j = 0; j < cols; ++j)
+                {
+                    const char* val = PQgetvalue(res, i, j);
+                    const char* colName = PQfname(res, j);
+                    row[colName] = (val && *val) ? val : nullptr;
+                }
+                result.push_back(row);
+            }
+            
+            PQclear(res);
+            return result;
+        }
+        
+        ~DatabaseManager()
+        {
+            if (conn_)
+            {
+                PQfinish(conn_);
+            }
+        }
+        
+    private:
+        DatabaseManager() : conn_(nullptr) {}
+        PGconn* conn_;
+    };
     
     class HTTPServer
     {
@@ -145,6 +316,14 @@ namespace
             
             std::cout << method << " " << path << "\n";
             
+            // Handle API routes
+            if (path.find("/api/") == 0)
+            {
+                handleAPI(clientFd, method, path, request);
+                return;
+            }
+            
+            // Handle static files
             if (method != "GET" && method != "HEAD")
             {
                 sendError(clientFd, 405, "Method Not Allowed");
@@ -170,6 +349,186 @@ namespace
             }
             
             serveFile(clientFd, filePath, isHead);
+        }
+        
+        void handleAPI(int clientFd, const std::string& method, const std::string& path, const std::string& request) const
+        {
+            json response;
+            int statusCode = 200;
+            
+            if (path == "/api/auth/login" && method == "POST")
+            {
+                response = handleLogin(request);
+                statusCode = response.contains("error") ? 401 : 200;
+            }
+            else if (path == "/api/challenges" && method == "GET")
+            {
+                response = handleGetChallenges();
+            }
+            else if (path == "/api/profile" && method == "GET")
+            {
+                response = handleGetProfile(request);
+            }
+            else if (path.find("/api/challenges/") == 0 && method == "POST")
+            {
+                // Extract challenge ID from path
+                std::string idStr = path.substr(strlen("/api/challenges/"));
+                idStr = idStr.substr(0, idStr.find('/'));
+                response = handleSolveChallenge(request, idStr);
+            }
+            else
+            {
+                statusCode = 404;
+                response = json{{"error", "Not Found"}};
+            }
+            
+            sendJSON(clientFd, response, statusCode);
+        }
+        
+        json handleLogin(const std::string& requestBody) const
+        {
+            try
+            {
+                size_t bodyStart = requestBody.find("\r\n\r\n");
+                if (bodyStart == std::string::npos)
+                {
+                    return json{{"success", false}};
+                }
+                
+                std::string body = requestBody.substr(bodyStart + 4);
+                auto data = json::parse(body);
+                
+                std::string username = data["username"];
+                std::string password = data["password"];
+                
+                // Check if user exists
+                std::string checkSql = "SELECT userID, username, score FROM ctf.users WHERE username = '" + 
+                                      escapeSQL(username) + "';";
+                
+                auto& db = DatabaseManager::getInstance();
+                json result = db.query(checkSql);
+                
+                if (result.is_array() && result.size() > 0)
+                {
+                    // User exists, return their data
+                    return json{
+                        {"success", true},
+                        {"user", result[0]}
+                    };
+                }
+                
+                // User doesn't exist, insert with provided password
+                std::string insertSql = "INSERT INTO ctf.users (username, password_hash, score) VALUES ('" +
+                                       escapeSQL(username) + "', '" +
+                                       escapeSQL(password) + "', 0) RETURNING userID, username, score;";
+                
+                json insertResult = db.query(insertSql);
+                
+                if (insertResult.is_array() && insertResult.size() > 0)
+                {
+                    return json{
+                        {"success", true},
+                        {"user", insertResult[0]}
+                    };
+                }
+                
+                // If insertion fails (duplicate), just fetch the user
+                json retryResult = db.query(checkSql);
+                if (retryResult.is_array() && retryResult.size() > 0)
+                {
+                    return json{
+                        {"success", true},
+                        {"user", retryResult[0]}
+                    };
+                }
+                
+                return json{{"success", false}};
+            }
+            catch (const std::exception& e)
+            {
+                return json{{"success", false}};
+            }
+        }
+        
+        json handleGetChallenges() const
+        {
+            std::string sql = "SELECT challengeID, title, description, points, difficulty FROM ctf.challenges;";
+            auto& db = DatabaseManager::getInstance();
+            return db.query(sql);
+        }
+        
+        json handleGetProfile(const std::string& requestBody) const
+        {
+            // Extract userID from query params or headers
+            size_t userIdPos = requestBody.find("userID=");
+            if (userIdPos == std::string::npos)
+            {
+                return json{{"error", "Missing userID"}};
+            }
+            
+            std::string userIdStr = requestBody.substr(userIdPos + 7, 10);
+            userIdStr = userIdStr.substr(0, userIdStr.find_first_of("& \r\n"));
+            
+            std::string sql = "SELECT userID, username, score, lastLogin FROM ctf.users WHERE userID = " + userIdStr + ";";
+            auto& db = DatabaseManager::getInstance();
+            return db.query(sql);
+        }
+        
+        json handleSolveChallenge(const std::string& requestBody, const std::string& challengeID) const
+        {
+            try
+            {
+                size_t bodyStart = requestBody.find("\r\n\r\n");
+                if (bodyStart == std::string::npos)
+                {
+                    return json{{"error", "Invalid request"}};
+                }
+                
+                std::string body = requestBody.substr(bodyStart + 4);
+                auto data = json::parse(body);
+                int userID = data["userID"];
+                
+                std::string sql = "INSERT INTO ctf.solved (challengeID, userID) VALUES (" + 
+                                 challengeID + ", " + std::to_string(userID) + ") ON CONFLICT DO NOTHING;";
+                
+                auto& db = DatabaseManager::getInstance();
+                db.query(sql);
+                
+                return json{{"success", true}, {"message", "Challenge solved"}};
+            }
+            catch (const std::exception& e)
+            {
+                return json{{"error", std::string(e.what())}};
+            }
+        }
+        
+        void sendJSON(int clientFd, const json& data, int statusCode) const
+        {
+            std::string jsonStr = data.dump();
+            std::ostringstream response;
+            response << "HTTP/1.1 " << statusCode << " OK\r\n";
+            response << "Content-Type: application/json\r\n";
+            response << "Content-Length: " << jsonStr.size() << "\r\n";
+            response << "Access-Control-Allow-Origin: *\r\n";
+            response << "Connection: close\r\n";
+            response << "\r\n";
+            response << jsonStr;
+            
+            std::string responseStr = response.str();
+            ::send(clientFd, responseStr.c_str(), responseStr.size(), 0);
+        }
+        
+        std::string escapeSQL(const std::string& input) const
+        {
+            std::string result;
+            for (char c : input)
+            {
+                if (c == '\'')
+                    result += "''";
+                else
+                    result += c;
+            }
+            return result;
         }
         
         void serveFile(int clientFd, const std::string& filePath, bool isHead) const
@@ -250,6 +609,23 @@ namespace
 
 int main()
 {
-    HTTPServer server(8080);
+    // Load configuration
+    auto& config = ConfigManager::getInstance();
+    if (!config.loadConfig("db_config.json"))
+    {
+        std::cerr << "Failed to load configuration\n";
+        return 1;
+    }
+    
+    // Connect to database
+    auto& db = DatabaseManager::getInstance();
+    if (!db.connect())
+    {
+        std::cerr << "Failed to connect to database\n";
+        return 1;
+    }
+    
+    int serverPort = config.getInt("server.port");
+    HTTPServer server(serverPort);
     return server.run();
 }

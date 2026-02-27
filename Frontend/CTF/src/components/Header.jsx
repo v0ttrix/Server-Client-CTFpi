@@ -15,7 +15,7 @@
   justify-between gap-5 w-full">
 
            {/* Logo - Desktop */}
-           <a href="/" className="max-sm:hidden">
+           <a href="/home" className="max-sm:hidden">
              <span className="text-2xl font-bold
   text-green-500">CTF Pi </span>
            </a>
@@ -45,7 +45,7 @@
                <li className="max-lg:border-b
   max-lg:border-gray-700 max-lg:py-3 px-3">
                  <NavLink
-                   to="/"
+                   to="/home"
                    className={({ isActive }) =>
                      isActive
                        ? "text-green-500 block font-medium text-[15px]"
@@ -86,6 +86,22 @@
                    onClick={() => setIsMenuOpen(false)}
                  >
                    Challenges
+                 </NavLink>
+               </li>
+
+               {/* Login Link */}
+               <li className="max-lg:border-b
+  max-lg:border-gray-700 max-lg:py-3 px-3">
+                 <NavLink
+                   to="/login"
+                   className={({ isActive }) =>
+                     isActive
+                       ? "text-green-500 block font-medium text-[15px]"
+                       : "hover:text-green-400 text-white block font-medium text-[15px]"
+                   }
+                   onClick={() => setIsMenuOpen(false)}
+                 >
+                   Login
                  </NavLink>
                </li>
              </ul>
