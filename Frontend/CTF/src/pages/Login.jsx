@@ -17,7 +17,7 @@ const Login = () => {
       const result = await authAPI.login(username, password);
       if (result.success) {
         localStorage.setItem('user', JSON.stringify(result.user));
-        navigate('/dashboard');
+        navigate('/home');
       }
     } catch (err) {
       // Silently fail
