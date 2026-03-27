@@ -2,6 +2,44 @@ import { useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+const buildEnvelope = (data = {}) => ({
+  meta: { version: '1.0' },
+  data,
+});
+
+const parseEnvelope = (payload) => {
+  if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'success')) {
+    return payload;
+  }
+
+  // Backward compatibility for any non-enveloped responses.
+  return {
+    success: true,
+    meta: { version: 'legacy' },
+    data: payload,
+  };
+};
+
+const apiFetch = async (endpoint, options = {}) => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  const payload = await response.json();
+  const envelope = parseEnvelope(payload);
+
+  if (!response.ok || !envelope.success) {
+    const message = envelope?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+    throw new Error(message);
+  }
+
+  return envelope;
+};
+
 export const useAPI = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,21 +49,9 @@ export const useAPI = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const envelope = await apiFetch(endpoint, options);
       setLoading(false);
-      return data;
+      return envelope.data;
     } catch (err) {
       const errorMsg = err.message || 'Unknown error occurred';
       setError(errorMsg);
@@ -38,33 +64,47 @@ export const useAPI = () => {
 };
 
 export const authAPI = {
-  login: (username, password) => {
-    return fetch(`${API_URL}/auth/login`, {
+  login: async (username, password) => {
+    const envelope = await apiFetch('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    }).then(r => r.json());
+      body: JSON.stringify(buildEnvelope({ username, password })),
+    });
+
+    return {
+      success: envelope.success,
+      user: envelope?.data?.user,
+      error: envelope?.error?.message,
+    };
   },
 };
 
 export const challengesAPI = {
-  getAll: () => {
-    return fetch(`${API_URL}/challenges`)
-      .then(r => r.json());
+  getAll: async () => {
+    const envelope = await apiFetch('/challenges');
+    return envelope?.data?.challenges || [];
   },
 
-  solve: (userID, challengeID) => {
-    return fetch(`${API_URL}/challenges/${challengeID}/solve`, {
+  solve: async (userID, challengeID) => {
+    const envelope = await apiFetch(`/challenges/${challengeID}/solve`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userID }),
-    }).then(r => r.json());
+      body: JSON.stringify(buildEnvelope({ userID })),
+    });
+
+    return {
+      success: envelope.success,
+      message: envelope?.data?.message || '',
+      error: envelope?.error?.message,
+    };
   },
 };
 
 export const profileAPI = {
-  get: (userID) => {
-    return fetch(`${API_URL}/profile?userID=${userID}`)
-      .then(r => r.json());
+  get: async (userID) => {
+    const envelope = await apiFetch('/profile', {
+      method: 'POST',
+      body: JSON.stringify(buildEnvelope({ userID })),
+    });
+
+    return envelope?.data?.profile || [];
   },
 };

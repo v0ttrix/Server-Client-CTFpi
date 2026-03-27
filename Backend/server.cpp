@@ -13,6 +13,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <libpq-fe.h>
+#include "packet.h"
 
 namespace
 {
@@ -358,45 +359,109 @@ namespace
             
             if (path == "/api/auth/login" && method == "POST")
             {
-                response = handleLogin(request);
-                statusCode = response.contains("error") ? 401 : 200;
+                json loginResult = handleLogin(request);
+                if (loginResult.value("success", false))
+                {
+                    response = makeSuccessResponse(json{{"user", loginResult["user"]}});
+                }
+                else
+                {
+                    statusCode = 401;
+                    response = makeErrorResponse("AUTH_FAILED", "Invalid credentials");
+                }
             }
             else if (path == "/api/challenges" && method == "GET")
             {
-                response = handleGetChallenges();
+                json challenges = handleGetChallenges();
+                if (challenges.is_object() && challenges.contains("error"))
+                {
+                    statusCode = 500;
+                    response = makeErrorResponse("DB_ERROR", challenges["error"]);
+                }
+                else
+                {
+                    response = makeSuccessResponse(json{{"challenges", challenges}});
+                }
             }
-            else if (path == "/api/profile" && method == "GET")
+            else if (path == "/api/profile" && method == "POST")
             {
-                response = handleGetProfile(request);
+                json profile = handleGetProfile(request);
+                if (profile.is_object() && profile.contains("error"))
+                {
+                    statusCode = 400;
+                    response = makeErrorResponse("INVALID_REQUEST", profile["error"]);
+                }
+                else
+                {
+                    response = makeSuccessResponse(json{{"profile", profile}});
+                }
             }
             else if (path.find("/api/challenges/") == 0 && method == "POST")
             {
                 // Extract challenge ID from path
                 std::string idStr = path.substr(strlen("/api/challenges/"));
                 idStr = idStr.substr(0, idStr.find('/'));
-                response = handleSolveChallenge(request, idStr);
+                json solveResult = handleSolveChallenge(request, idStr);
+                if (solveResult.is_object() && solveResult.contains("error"))
+                {
+                    statusCode = 400;
+                    response = makeErrorResponse("INVALID_REQUEST", solveResult["error"]);
+                }
+                else
+                {
+                    response = makeSuccessResponse(solveResult);
+                }
             }
             else
             {
                 statusCode = 404;
-                response = json{{"error", "Not Found"}};
+                response = makeErrorResponse("NOT_FOUND", "Endpoint not found");
             }
             
             sendJSON(clientFd, response, statusCode);
+        }
+
+        json makeSuccessResponse(const json& data) const
+        {
+            return ctf::Packet::success(data);
+        }
+
+        json makeErrorResponse(const std::string& code, const std::string& message) const
+        {
+            return ctf::Packet::error(code, message);
+        }
+
+        std::string extractBody(const std::string& request) const
+        {
+            size_t bodyStart = request.find("\r\n\r\n");
+            if (bodyStart == std::string::npos)
+            {
+                return "";
+            }
+            return request.substr(bodyStart + 4);
+        }
+
+        json extractRequestData(const std::string& request) const
+        {
+            std::string body = extractBody(request);
+            if (body.empty())
+            {
+                return json::object();
+            }
+
+            json parsed = json::parse(body);
+            return ctf::Packet::extractData(parsed);
         }
         
         json handleLogin(const std::string& requestBody) const
         {
             try
             {
-                size_t bodyStart = requestBody.find("\r\n\r\n");
-                if (bodyStart == std::string::npos)
+                json data = extractRequestData(requestBody);
+                if (!data.contains("username") || !data.contains("password"))
                 {
                     return json{{"success", false}};
                 }
-                
-                std::string body = requestBody.substr(bodyStart + 4);
-                auto data = json::parse(body);
                 
                 std::string username = data["username"];
                 std::string password = data["password"];
@@ -459,15 +524,15 @@ namespace
         
         json handleGetProfile(const std::string& requestBody) const
         {
-            // Extract userID from query params or headers
-            size_t userIdPos = requestBody.find("userID=");
-            if (userIdPos == std::string::npos)
+            json data = extractRequestData(requestBody);
+            if (!data.contains("userID"))
             {
                 return json{{"error", "Missing userID"}};
             }
-            
-            std::string userIdStr = requestBody.substr(userIdPos + 7, 10);
-            userIdStr = userIdStr.substr(0, userIdStr.find_first_of("& \r\n"));
+
+            std::string userIdStr = data["userID"].is_string()
+                ? data["userID"].get<std::string>()
+                : std::to_string(data["userID"].get<int>());
             
             std::string sql = "SELECT userID, username, score, lastLogin FROM ctf.users WHERE userID = " + userIdStr + ";";
             auto& db = DatabaseManager::getInstance();
@@ -478,14 +543,12 @@ namespace
         {
             try
             {
-                size_t bodyStart = requestBody.find("\r\n\r\n");
-                if (bodyStart == std::string::npos)
+                json data = extractRequestData(requestBody);
+                if (!data.contains("userID"))
                 {
                     return json{{"error", "Invalid request"}};
                 }
-                
-                std::string body = requestBody.substr(bodyStart + 4);
-                auto data = json::parse(body);
+
                 int userID = data["userID"];
                 
                 std::string sql = "INSERT INTO ctf.solved (challengeID, userID) VALUES (" + 
@@ -506,7 +569,7 @@ namespace
         {
             std::string jsonStr = data.dump();
             std::ostringstream response;
-            response << "HTTP/1.1 " << statusCode << " OK\r\n";
+            response << "HTTP/1.1 " << statusCode << " " << getStatusText(statusCode) << "\r\n";
             response << "Content-Type: application/json\r\n";
             response << "Content-Length: " << jsonStr.size() << "\r\n";
             response << "Access-Control-Allow-Origin: *\r\n";
@@ -516,6 +579,20 @@ namespace
             
             std::string responseStr = response.str();
             ::send(clientFd, responseStr.c_str(), responseStr.size(), 0);
+        }
+
+        const char* getStatusText(int code) const
+        {
+            switch (code)
+            {
+                case 200: return "OK";
+                case 400: return "Bad Request";
+                case 401: return "Unauthorized";
+                case 404: return "Not Found";
+                case 405: return "Method Not Allowed";
+                case 500: return "Internal Server Error";
+                default: return "OK";
+            }
         }
         
         std::string escapeSQL(const std::string& input) const
