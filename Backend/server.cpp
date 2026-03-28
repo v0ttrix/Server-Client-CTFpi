@@ -535,10 +535,16 @@ namespace
         {
             // Check if file exists and get size
             struct stat fileStat;
-            if (stat(filePath.c_str(), &fileStat) != 0)
+            std::string servePath = filePath;
+            if (stat(servePath.c_str(), &fileStat) != 0)
             {
-                sendError(clientFd, 404, "Not Found");
-                return;
+                // SPA fallback: serve index.html for client-side routes
+                servePath = std::string(kWebRoot) + "/index.html";
+                if (stat(servePath.c_str(), &fileStat) != 0)
+                {
+                    sendError(clientFd, 404, "Not Found");
+                    return;
+                }
             }
             
             // Check if it's a regular file
@@ -549,7 +555,7 @@ namespace
             }
             
             // Get MIME type
-            std::string mimeType = getMimeType(filePath);
+            std::string mimeType = getMimeType(servePath);
             
             // Send HTTP headers
             std::ostringstream headers;
@@ -569,7 +575,7 @@ namespace
             }
             
             // Open file for GET requests
-            int fd = open(filePath.c_str(), O_RDONLY);
+            int fd = open(servePath.c_str(), O_RDONLY);
             if (fd < 0)
             {
                 return; // Headers already sent, can't send error
