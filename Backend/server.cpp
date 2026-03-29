@@ -10,7 +10,8 @@
 
 enum class ServerState {
     ONLINE,
-    MAINTENANCE
+    MAINTENANCE,
+    OFFLINE
 };
 
 Class CTFServer{
@@ -93,7 +94,7 @@ Class CTFServer{
          close(fd);
     }
 
-    
+
 
     
 }
