@@ -24,7 +24,8 @@ enum class Command : uint32_t {
     TOGGLE_MAINTENANCE = 101,
     SET_ONLINE = 102,
     REQUEST_FLAG_IMAGE = 103, 
-    ACK = 200
+    ACK = 200,
+    ERROR = 400
 };
 
 #pragma pack(push, 1)
@@ -142,27 +143,27 @@ public:
         return buffer;
     }
 
-    static NetworkPacket deserialize(const uint8_t* data, uint32_t totalSize) {
+    static NetworkPacket* deserialize(const uint8_t* data, uint32_t totalSize) {
         if (totalSize < sizeof(Header)) {
             throw std::runtime_error("Data too small to contain header");
         }
         
-        NetworkPacket packet;
+        NetworkPacket* packet = new NetworkPacket();
         
         Header netHeader;
         std::memcpy(&netHeader, data, sizeof(Header));
         
-        packet.header.commandID = static_cast<Command>(ntohl(static_cast<uint32_t>(netHeader.commandID)));
-        packet.header.payloadSize = ntohl(netHeader.payloadSize);
-        packet.header.payloadCRC = ntohl(netHeader.payloadCRC);
+        packet->header.commandID = static_cast<Command>(ntohl(static_cast<uint32_t>(netHeader.commandID)));
+        packet->header.payloadSize = ntohl(netHeader.payloadSize);
+        packet->header.payloadCRC = ntohl(netHeader.payloadCRC);
 
-        if (totalSize < sizeof(Header) + packet.header.payloadSize) {
+        if (totalSize < sizeof(Header) + packet->header.payloadSize) {
             throw std::runtime_error("Data too small to contain complete payload");
         }
         
-        if (packet.header.payloadSize > 0) {
-            packet.payload = new uint8_t[packet.header.payloadSize];
-            std::memcpy(packet.payload, data + sizeof(Header), packet.header.payloadSize);
+        if (packet->header.payloadSize > 0) {
+            packet->payload = new uint8_t[packet->header.payloadSize];
+            std::memcpy(packet->payload, data + sizeof(Header), packet->header.payloadSize);
         }
         
         return packet;
