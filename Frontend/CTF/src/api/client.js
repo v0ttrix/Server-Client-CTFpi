@@ -1,6 +1,4 @@
-import { useState } from 'react';
-
-const WS_URL = process.env.WEBSOCKET_URL;
-
 export const Command = {
-}
+    NONE: 0, LOGIN: 100, TOGGLE_MAINTENANCE: 101, 
+    SET_ONLINE: 102, REQUEST_FLAG_IMAGE: 103, ACK: 200, ERROR: 400
+};
