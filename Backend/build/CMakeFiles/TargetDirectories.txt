@@ -1,0 +1,3 @@
+/home/pi/Server-Client-CTFpi/Backend/build/CMakeFiles/ctf_server.dir
+/home/pi/Server-Client-CTFpi/Backend/build/CMakeFiles/edit_cache.dir
+/home/pi/Server-Client-CTFpi/Backend/build/CMakeFiles/rebuild_cache.dir

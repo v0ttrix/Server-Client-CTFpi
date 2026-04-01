@@ -154,8 +154,10 @@ Class CTFServer{
         }
     }
 
+};
 
-
-    
+int main() {
+    CTFServer server;
+    server.start(8080);
+    return 0;
 }
-
