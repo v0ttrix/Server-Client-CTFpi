@@ -36,7 +36,7 @@ describe('Login Component', () => {
     );
 
     expect(screen.getByText(/CTF Login/i)).toBeInTheDocument();
-    expect(screen.getByText(/🔴 Server Offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/Server Status: OFFLINE/i)).toBeInTheDocument();
     
     // Login button should be disabled when offline
     const loginBtn = screen.getByRole('button', { name: /login/i });
@@ -58,7 +58,7 @@ describe('Login Component', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/🟢 Server Connected/i)).toBeInTheDocument();
+    expect(screen.getByText(/Server Status: ONLINE/i)).toBeInTheDocument();
     
     // Type in inputs (these match the placeholders in your Login component)
     fireEvent.change(screen.getByPlaceholderText(/Username/i), { target: { value: 'admin' } });
