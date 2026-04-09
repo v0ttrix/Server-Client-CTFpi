@@ -157,7 +157,7 @@ public:
         packet->header.payloadSize = ntohl(netHeader.payloadSize);
         packet->header.payloadCRC = ntohl(netHeader.payloadCRC);
 
-        if (totalSize < sizeof(Header) + packet->header.payloadSize) {
+        if (totalSize > sizeof(Header) && totalSize < sizeof(Header) + packet->header.payloadSize) {
             throw std::runtime_error("Data too small to contain complete payload");
         }
         

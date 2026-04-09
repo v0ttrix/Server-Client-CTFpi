@@ -7,8 +7,10 @@ import About from "./pages/About";
 import Challenges from "./pages/Challenges";
 
 function ProtectedRoute({ children }) {
-    const { isAuthenticated } = useWebSocket();
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
+    const { isAuthenticated, isMaintenance } = useWebSocket();
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (isMaintenance) return <Navigate to="/login" replace />;
+    return children;
 }
 
 export default function App() {

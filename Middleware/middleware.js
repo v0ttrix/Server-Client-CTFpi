@@ -53,4 +53,12 @@ wss.on('connection', (ws) => {
     ws.on('close', () => tcpClient.destroy());
     tcpClient.on('error', () => ws.send(JSON.stringify({ error: 'TCP Server Offline' })));
 });
-console.log(` Middleware listening on ws://localhost:${WS_PORT}`);
+console.log(` Middleware listening on ws://localhost:${WS_PORT}`);const http = require("http");
+const HTTP_PORT = 3001;
+let maintenance = false;
+const httpServer = http.createServer((req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ maintenance }));
+});
+httpServer.listen(HTTP_PORT, () => console.log(` Health endpoint on http://0.0.0.0:${HTTP_PORT}`));

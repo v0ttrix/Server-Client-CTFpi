@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useWebSocket } from '../api/WebSocketContext';
+import { useWebSocket } from '../api/WebSocket';
 import { Command } from '../api/client';
 
 export default function Challenges() {
