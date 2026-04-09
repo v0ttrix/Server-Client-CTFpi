@@ -52,3 +52,28 @@ configure_file(
 message(STATUS "CTF Server build configured")
 message(STATUS "PostgreSQL: ${PostgreSQL_LIBRARIES}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+
+# ==========================================
+# Google Test (GTest) - Packet Tests Only
+# ==========================================
+enable_testing()
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+# Force GTest to use shared CRT (fixes Windows build issues)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+# Create an executable JUST for the packet tests (ignores server.cpp entirely)
+add_executable(packet_tests tests/test_packet.cpp)
+
+# Link GTest's main function so we don't have to write one
+target_link_libraries(packet_tests PRIVATE gtest_main)
+
+# Register the tests with CMake
+include(GoogleTest)
+gtest_discover_tests(packet_tests)
