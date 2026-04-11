@@ -28,19 +28,17 @@ const GlowCard = ({
 
   useEffect(() => {
     const syncPointer = (e) => {
-      const { clientX: x, clientY: y } = e;
-
       if (cardRef.current) {
-        cardRef.current.style.setProperty("--x", x.toFixed(2));
-        cardRef.current.style.setProperty(
-          "--xp",
-          (x / window.innerWidth).toFixed(2),
-        );
-        cardRef.current.style.setProperty("--y", y.toFixed(2));
-        cardRef.current.style.setProperty(
-          "--yp",
-          (y / window.innerHeight).toFixed(2),
-        );
+        const rect = cardRef.current.getBoundingClientRect();
+        const localX = e.clientX - rect.left;
+        const localY = e.clientY - rect.top;
+        const xp = e.clientX / window.innerWidth;
+        const yp = e.clientY / window.innerHeight;
+
+        cardRef.current.style.setProperty("--x", localX.toFixed(2));
+        cardRef.current.style.setProperty("--xp", xp.toFixed(2));
+        cardRef.current.style.setProperty("--y", localY.toFixed(2));
+        cardRef.current.style.setProperty("--yp", yp.toFixed(2));
       }
     };
 
@@ -81,7 +79,6 @@ const GlowCard = ({
       backgroundSize:
         "calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)))",
       backgroundPosition: "50% 50%",
-      backgroundAttachment: "fixed",
       border: "var(--border-size) solid var(--backup-border)",
       position: "relative",
       touchAction: "none",
@@ -107,7 +104,6 @@ const GlowCard = ({
       inset: calc(var(--border-size) * -1);
       border: var(--border-size) solid transparent;
       border-radius: calc(var(--radius) * 1px);
-      background-attachment: fixed;
       background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
       background-repeat: no-repeat;
       background-position: 50% 50%;
@@ -163,7 +159,7 @@ const GlowCard = ({
         style={getInlineStyles()}
         className={`
           ${getSizeClasses()}
-          ${!customSize ? "aspect-[3/4]" : ""}
+          ${!customSize ? "aspect-3/4" : ""}
           rounded-2xl 
           relative 
           grid 

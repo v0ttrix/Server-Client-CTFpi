@@ -197,7 +197,7 @@ export default function Challenges() {
                       {chal.difficulty}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-sm mb-6 flex-grow leading-relaxed">
+                  <p className="text-gray-400 text-sm mb-6 grow leading-relaxed">
                     {chal.description}
                   </p>
                   <div className="flex justify-between items-end mt-auto pt-4 border-t border-white/10 group-hover:border-green-500/50 transition-colors duration-300">

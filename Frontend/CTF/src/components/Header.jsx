@@ -43,15 +43,17 @@ const Header = () => {
       <div className="flex-1 flex justify-start">
         <NavLink
           to="/home"
-          className="transition-all duration-200 active:scale-90 hover:opacity-80 hover:drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+          className="flex items-center gap-1 transition-all duration-200 active:scale-90 hover:opacity-80 hover:drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]"
           title="Home"
         >
-          {/* Replace this src with your actual logo image path later! */}
           <img
-            src="/vite.svg"
+            src="/CTF-Icon.png"
             alt="CTF Pi Logo"
             className="h-8 w-auto object-contain"
           />
+          <span className="text-xl font-bold text-green-500 uppercase tracking-widest">
+            CTF
+          </span>
         </NavLink>
       </div>
 
