@@ -66,7 +66,7 @@ const GlowCard = ({
       "--border": "3",
       "--backdrop": "hsl(0 0% 60% / 0.12)",
       "--backup-border": "var(--backdrop)",
-      "--size": "200",
+      "--size": "300",
       "--outer": "1",
       "--border-size": "calc(var(--border, 2) * 1px)",
       "--spotlight-size": "calc(var(--size, 150) * 1px)",
@@ -123,7 +123,7 @@ const GlowCard = ({
         calc(var(--y, 0) * 1px),
         hsl(var(--hue, 140) 100% 50% / var(--border-spot-opacity, 1)), transparent 100%
       );
-      filter: brightness(2);
+      filter: brightness(1.2);
     }
     
     [data-glow]::after {
@@ -131,7 +131,7 @@ const GlowCard = ({
         calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
         calc(var(--x, 0) * 1px)
         calc(var(--y, 0) * 1px),
-        hsl(0 100% 100% / var(--border-light-opacity, 1)), transparent 100%
+        hsl(var(--hue, 140) 100% 60% / var(--border-light-opacity, 0.8)), transparent 100%
       );
     }
     
