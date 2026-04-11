@@ -1,6 +1,10 @@
 import React from "react";
 
 const About = () => {
+  React.useEffect(() => {
+    document.title = "CTF Pi | About";
+  }, []);
+
   const teamMembers = [
     { name: "Team Member 1", role: "Developer" },
     { name: "Team Member 2", role: "Developer" },

@@ -2,6 +2,10 @@ import React from "react";
 import { Button } from "../components/Button";
 
 const Home = () => {
+  React.useEffect(() => {
+    document.title = "CTF Pi | Home";
+  }, []);
+
   return (
     <div className="min-h-[calc(100vh-70px)] flex flex-col items-center justify-center p-4 font-mono text-center">
       <div className="space-y-6 max-w-3xl -mt-10 md:-mt-20">

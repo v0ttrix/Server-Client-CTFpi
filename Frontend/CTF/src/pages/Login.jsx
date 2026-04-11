@@ -16,6 +16,10 @@ export default function Login() {
   const { isConnected, isAuthenticated, isMaintenance, sendCmd } =
     useWebSocket();
 
+  useEffect(() => {
+    document.title = "CTF Pi | Login";
+  }, []);
+
   const handleLogin = (e) => {
     e.preventDefault();
     setIsSubmitted(true);

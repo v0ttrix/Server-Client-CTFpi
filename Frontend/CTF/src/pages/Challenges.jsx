@@ -116,6 +116,7 @@ export default function Challenges() {
   const [completed, setCompleted] = useState([]);
 
   useEffect(() => {
+    document.title = "CTF Pi | Challenges";
     const savedCompleted = JSON.parse(
       localStorage.getItem("completedChallenges") || "[]",
     );
