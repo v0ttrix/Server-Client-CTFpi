@@ -18,9 +18,12 @@ export default function App() {
     <WebSocketProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={
+          <Route
+            path="*"
+            element={
               <ProtectedRoute>
                 <>
                   <Header />
