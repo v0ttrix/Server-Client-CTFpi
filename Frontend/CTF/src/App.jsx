@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { WebSocketProvider, useWebSocket } from "./api/WebSocket";
 import Header from "./components/Header";
 import Login from "./pages/Login";
@@ -9,11 +9,19 @@ import ChallengeDetail from "./pages/ChallengeDetail";
 import { Pointer } from "./components/magicui/pointer";
 import { BGPattern } from "./components/magicui/bg-pattern";
 
-function ProtectedRoute({ children }) {
+function ProtectedLayout() {
   const { isAuthenticated, isMaintenance } = useWebSocket();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isMaintenance) return <Navigate to="/login" replace />;
-  return children;
+  const location = useLocation();
+
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (isMaintenance) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  
+  return (
+    <>
+      <Header />
+      <Outlet />
+    </>
+  );
 }
 
 export default function App() {
@@ -29,30 +37,21 @@ export default function App() {
         />
       </div>
       <BrowserRouter>
-        <Header />
         <Pointer className="text-green-500 fill-green-500" />
         <Routes>
-          <Route path="/home" element={<Home />} />
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/challenges" element={<Challenges />} />
-          <Route path="/challenges/:id" element={<ChallengeDetail />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          {/* <Route
-            path="*"
-            element={
-              <ProtectedRoute>
-                <>
-                  <Header />
-                  <Routes>
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/challenges" element={<Challenges />} />
-                  </Routes>
-                </>
-              </ProtectedRoute>
-            }
-          /> */}
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/challenges" element={<Challenges />} />
+            <Route path="/challenges/:id" element={<ChallengeDetail />} />
+          </Route>
+
+          {/* Redirect to login if user types an unknown path or accesses root */}
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
     </WebSocketProvider>

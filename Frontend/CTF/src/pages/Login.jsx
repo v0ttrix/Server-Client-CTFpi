@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
@@ -13,6 +13,7 @@ export default function Login() {
   const [inputShake, setInputShake] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isConnected, isAuthenticated, isMaintenance, sendCmd } =
     useWebSocket();
 
@@ -20,9 +21,19 @@ export default function Login() {
     document.title = "CTF Pi | Login";
   }, []);
 
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+
+    if (!isConnected || isMaintenance) {
+      triggerShake();
+      return;
+    }
 
     if (!username || !password) {
       setInputShake(true);
@@ -30,20 +41,18 @@ export default function Login() {
       return;
     }
 
-    if (!isConnected || isMaintenance) {
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      return;
-    }
     sendCmd(Command.LOGIN, `${username}:${password}`);
   };
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/home");
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      const from = location.state?.from || "/home";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   const statusText = isMaintenance
-    ? "UNDER MAINTENANCE"
+    ? "MAINTENANCE"
     : isConnected
       ? "ONLINE"
       : "OFFLINE";
@@ -53,6 +62,12 @@ export default function Login() {
     : isConnected
       ? "text-green-500"
       : "text-red-500";
+
+  const isSystemReady = isConnected && !isMaintenance;
+
+  const handleFormInteraction = () => {
+    if (!isSystemReady) triggerShake();
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 font-mono relative overflow-hidden">
@@ -78,15 +93,24 @@ export default function Login() {
                 </motion.span>
               </p>
             </div>
-            <form onSubmit={handleLogin} className="space-y-6" noValidate>
+            <form 
+              onSubmit={handleLogin} 
+              className="space-y-6" 
+              noValidate
+              onClickCapture={handleFormInteraction}
+              onFocusCapture={handleFormInteraction}
+            >
               <div className="space-y-5 mt-4">
                 <motion.input
-                  className={`w-full bg-transparent border-b-2 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors ${
-                    isSubmitted && !username
+                  className={`w-full bg-transparent border-b-2 ${
+                    !isSystemReady ? "text-gray-500 border-gray-700 cursor-not-allowed" : "text-green-500 focus:border-green-500"
+                  } px-2 py-2 focus:outline-none placeholder-gray-500 transition-colors ${
+                    isSubmitted && !username && isSystemReady
                       ? "border-red-500"
                       : "border-gray-300"
                   }`}
                   placeholder="Username"
+                  readOnly={!isSystemReady}
                   onChange={(e) => {
                     setUsername(e.target.value);
                   }}
@@ -98,13 +122,16 @@ export default function Login() {
                   transition={{ duration: 0.4 }}
                 />
                 <motion.input
-                  className={`w-full bg-transparent border-b-2 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors ${
-                    isSubmitted && !password
+                  className={`w-full bg-transparent border-b-2 ${
+                    !isSystemReady ? "text-gray-500 border-gray-700 cursor-not-allowed" : "text-green-500 focus:border-green-500"
+                  } px-2 py-2 focus:outline-none placeholder-gray-500 transition-colors ${
+                    isSubmitted && !password && isSystemReady
                       ? "border-red-500"
                       : "border-gray-300"
                   }`}
                   type="password"
                   placeholder="Password"
+                  readOnly={!isSystemReady}
                   onChange={(e) => {
                     setPassword(e.target.value);
                   }}
@@ -116,8 +143,15 @@ export default function Login() {
                   transition={{ duration: 0.4 }}
                 />
               </div>
-              <Button className="w-full mt-6" type="submit">
-                Access Terminal
+              <Button 
+                className={`w-full mt-6 ${
+                  !isSystemReady 
+                    ? "cursor-not-allowed hover:bg-red-500! hover:shadow-[0_15px_20px_rgba(239,68,68,0.4)]! hover:text-white" 
+                    : ""
+                }`} 
+                type="submit" 
+              >
+                {!isSystemReady ? "SYSTEM UNAVAILABLE" : "ACCESS TERMINAL"}
               </Button>
             </form>
           </div>

@@ -6,6 +6,7 @@ const glowColorMap = {
   green: { base: 140, spread: 0 },
   red: { base: 0, spread: 200 },
   orange: { base: 30, spread: 200 },
+  yellow: { base: 60, spread: 200 },
 };
 
 const sizeMap = {
