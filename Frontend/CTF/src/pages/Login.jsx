@@ -10,12 +10,22 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [shake, setShake] = useState(false);
+  const [inputShake, setInputShake] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
   const { isConnected, isAuthenticated, isMaintenance, sendCmd } =
     useWebSocket();
 
   const handleLogin = (e) => {
     e.preventDefault();
+    setIsSubmitted(true);
+
+    if (!username || !password) {
+      setInputShake(true);
+      setTimeout(() => setInputShake(false), 500);
+      return;
+    }
+
     if (!isConnected || isMaintenance) {
       setShake(true);
       setTimeout(() => setShake(false), 500);
@@ -71,24 +81,46 @@ export default function Login() {
                 </motion.span>
               </p>
             </div>
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6" noValidate>
               <div className="space-y-5 mt-4">
-                <input
-                  className="w-full bg-transparent border-b-2 border-gray-300 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
+                <motion.input
+                  className={`w-full bg-transparent border-b-2 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors ${
+                    isSubmitted && !username
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                   placeholder="Username"
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                  }}
+                  animate={
+                    inputShake && !username
+                      ? { x: [-10, 10, -8, 8, -5, 5, 0] }
+                      : { x: 0 }
+                  }
+                  transition={{ duration: 0.4 }}
                 />
-                <input
-                  className="w-full bg-transparent border-b-2 border-gray-300 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
+                <motion.input
+                  className={`w-full bg-transparent border-b-2 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors ${
+                    isSubmitted && !password
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  }`}
                   type="password"
                   placeholder="Password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                  }}
+                  animate={
+                    inputShake && !password
+                      ? { x: [-10, 10, -8, 8, -5, 5, 0] }
+                      : { x: 0 }
+                  }
+                  transition={{ duration: 0.4 }}
                 />
               </div>
               <button
-                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-medium text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:text-white hover:-translate-y-[7px] active:-translate-y-[1px]"
+                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-bold text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:-translate-y-1.75 active:-translate-y-px"
                 type="submit"
               >
                 Access Terminal
