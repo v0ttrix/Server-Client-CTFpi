@@ -27,7 +27,7 @@ const Header = () => {
           {isActive && (
             <motion.div
               layoutId="activeNavTab"
-              className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-green-500 shadow-[0_0_10px_rgba(34,197,94,1)]"
+              className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-green-500 shadow-[0_0_10px_rgba(34,197,94,1)]"
               initial={false}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
@@ -38,7 +38,7 @@ const Header = () => {
   );
 
   return (
-    <header className="flex items-center justify-between py-4 px-6 sm:px-10 bg-[#070707]/90 backdrop-blur-md min-h-[70px] border-b border-green-500/20 sticky top-0 z-50">
+    <header className="flex items-center justify-between py-4 px-6 sm:px-10 bg-[#070707]/90 backdrop-blur-md min-h-17.5 border-b border-green-500/20 sticky top-0 z-50">
       {/* Left: Site Icon (Image) */}
       <div className="flex-1 flex justify-start">
         <NavLink

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
-import { BGPattern } from "../components/magicui/bg-pattern";
 import { Button } from "../components/Button";
 import { motion } from "motion/react";
 
