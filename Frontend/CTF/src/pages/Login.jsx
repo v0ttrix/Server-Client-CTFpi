@@ -77,7 +77,7 @@ export default function Login() {
                 />
               </div>
               <button
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-4 px-4 mt-6 rounded-md transition-all uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0_0_15px_rgba(34,197,94,0.5)] disabled:hover:shadow-none"
+                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-medium text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:text-white hover:-translate-y-1.75 active:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-[0px_8px_15px_rgba(0,0,0,0.1)] disabled:hover:text-black disabled:hover:translate-y-0"
                 type="submit"
                 disabled={!isConnected || isMaintenance}
               >
