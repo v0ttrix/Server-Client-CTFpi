@@ -4,6 +4,7 @@ import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
 import { BGPattern } from "../components/magicui/bg-pattern";
+import { Button } from "../components/Button";
 import { motion } from "motion/react";
 
 export default function Login() {
@@ -119,12 +120,9 @@ export default function Login() {
                   transition={{ duration: 0.4 }}
                 />
               </div>
-              <button
-                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-bold text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:-translate-y-1.75 active:-translate-y-px"
-                type="submit"
-              >
+              <Button className="w-full mt-6" type="submit">
                 Access Terminal
-              </button>
+              </Button>
             </form>
           </div>
         </div>
