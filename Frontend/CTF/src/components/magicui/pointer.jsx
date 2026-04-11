@@ -40,8 +40,8 @@ export function Pointer({ children, className, ...props }) {
           target.tagName === "SELECT" ||
           target.closest?.("a") ||
           target.closest?.("button") ||
-          target.getAttribute?.("role") === "button" ||
-          target.getAttribute?.("role") === "link";
+          target.closest?.('[role="button"]') ||
+          target.closest?.('[role="link"]');
 
         if (isText) {
           setCursorState("text");

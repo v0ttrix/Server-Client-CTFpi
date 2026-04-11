@@ -163,7 +163,7 @@ const GlowCard = ({
         style={getInlineStyles()}
         className={`
           ${getSizeClasses()}
-          ${!customSize ? "aspect-3/4" : ""}
+          ${!customSize ? "aspect-[3/4]" : ""}
           rounded-2xl 
           relative 
           grid 
