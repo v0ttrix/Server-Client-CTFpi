@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
+import { BGPattern } from "../components/magicui/bg-pattern";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -33,11 +34,18 @@ export default function Login() {
       : "text-red-500";
 
   return (
-    <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4 font-mono">
+    <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4 font-mono relative overflow-hidden">
+      <BGPattern
+        variant="dots"
+        mask="fade-center"
+        fill="#22c55e"
+        size={24}
+        className="opacity-20"
+      />
       <GlowCard
         glowColor="green"
         customSize={true}
-        className="w-full max-w-md !p-0 !grid-rows-1 relative z-10"
+        className="w-full max-w-md p-0! grid-rows-1! relative z-10"
       >
         <div className="bg-neutral-900/60 p-10 px-12 rounded-2xl w-full h-full relative z-10">
           <div className="space-y-4">
@@ -45,7 +53,7 @@ export default function Login() {
               <h2 className="text-4xl font-bold text-green-500 tracking-widest uppercase">
                 CTF Login
               </h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-200">
                 System Status:{" "}
                 <span className={`font-semibold ${statusColor}`}>
                   {statusText}
@@ -55,13 +63,13 @@ export default function Login() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-5 mt-4">
                 <input
-                  className="w-full bg-transparent border-b-2 border-gray-600 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-300 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
                   placeholder="Username"
                   onChange={(e) => setUsername(e.target.value)}
                   required
                 />
                 <input
-                  className="w-full bg-transparent border-b-2 border-gray-600 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-300 text-green-500 px-2 py-2 focus:outline-none focus:border-green-500 placeholder-gray-500 transition-colors"
                   type="password"
                   placeholder="Password"
                   onChange={(e) => setPassword(e.target.value)}

@@ -16,9 +16,7 @@ export function Pointer({ children, className, ...props }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const springX = useSpring(x, { damping: 50, stiffness: 700 });
-  const springY = useSpring(y, { damping: 50, stiffness: 700 });
-  const transform = useMotionTemplate`translateX(${springX}px) translateY(${springY}px)`;
+  const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px)`;
 
   const [isVisible, setIsVisible] = useState(false);
   const [cursorState, setCursorState] = useState("default");
