@@ -1,0 +1,41 @@
+# ==============================================================================
+# Minimal Doxygen Configuration for CTFpi Backend
+# ==============================================================================
+
+# Project Information
+PROJECT_NAME           = "CTFpi"
+PROJECT_BRIEF          = "CTF Raspberry Pi Server Backend"
+OUTPUT_DIRECTORY       = "output doxygen"
+
+# Input Files and Directories
+# Only scan the Backend folder, and do it recursively
+INPUT                  = Backend README.md
+RECURSIVE              = YES
+
+USE_MDFILE_AS_MAINPAGE = README.MD
+
+# Exclude build artifacts and non-source folders
+EXCLUDE                = Backend/build \
+                         Backend/build_app
+
+# Include only relevant C++ source files
+FILE_PATTERNS          = *.cpp *.c *.h *.hpp
+
+# Documentation Extraction Control
+# Set to 'NO' so it only documents what you explicitly comment with /** ... */
+EXTRACT_ALL            = NO
+# Hide private and static internal details from the final docs
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_CLASSES  = YES
+
+# Output Formats
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+
+# C++ Optimization
+OPTIMIZE_OUTPUT_FOR_C  = NO
+BUILTIN_STL_SUPPORT    = YES
+QUIET                  = YES
+WARNINGS               = YES

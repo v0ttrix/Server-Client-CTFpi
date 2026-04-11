@@ -1,14 +1,19 @@
+
+/**
+ * @file packet.h
+ * @brief Defines the network packet structure and serialization protocol.
+ */
+
 #ifndef PACKET_H
 #define PACKET_H
 
-#include <cstdint>    // ADDED: Required for uint32_t, uint8_t
+#include <cstdint>
 #include <cstring>
 #include <string>
 #include <iostream>
 #include <vector>
 #include <stdexcept>
 
-// Cross-platform includes for htonl/ntohl
 #ifdef _WIN32
     #include <winsock2.h>
     #pragma comment(lib, "ws2_32.lib")
@@ -16,8 +21,12 @@
     #include <arpa/inet.h>
 #endif
 
-// REMOVED: using namespace std; (Prevents namespace pollution)
-
+/**
+ * @brief Available commands for the network protocol.
+ * 
+ * Defines the operations the client can request from the server, 
+ * as well as server response codes.
+ */
 enum class Command : uint32_t {
     NONE = 0,
     LOGIN = 100,
@@ -29,15 +38,33 @@ enum class Command : uint32_t {
 };
 
 #pragma pack(push, 1)
-struct Header{
+/**
+ * @brief Fixed-size header preceding every network packet.
+ * 
+ * This structure ensures that both the sender and receiver process
+ * the incoming byte stream correctly by specifying what command is
+ * being executed and how large the appended payload is.
+ */
+struct Header {
+    /** @brief The command identifier indicating the action to perform. */
     Command commandID; 
+    
+    /** @brief The size of the incoming payload in bytes (0 if no payload). */
     uint32_t payloadSize;
+    
+    /** @brief Checksum of the payload to verify data integrity. */
     uint32_t payloadCRC; 
 };
 #pragma pack(pop)
 
-class NetworkPacket{
-    private:
+/**
+ * @brief Represents a single network packet in the CTF application.
+ * 
+ * Provides functionality for creating, reading, serializing, and 
+ * deserializing packets sent over the TCP socket connection.
+ */
+class NetworkPacket {
+private:
     Header header;
     uint8_t* payload;
 
@@ -53,6 +80,9 @@ class NetworkPacket{
     }
 
 public:
+    /**
+     * @brief Constructs an empty packet with no command or payload.
+     */
     NetworkPacket(){
         header.commandID = Command::NONE;
         header.payloadSize = 0;
@@ -60,6 +90,11 @@ public:
         payload = nullptr;
     }
     
+    /**
+     * @brief Constructs a new packet with a specific command and pre-allocated payload size.
+     * @param cmd The command to execute.
+     * @param size The number of bytes to allocate for the payload.
+     */
     NetworkPacket(Command cmd, uint32_t size){
         header.commandID = cmd;
         header.payloadSize = size;
@@ -68,12 +103,15 @@ public:
         
         if (size > 0){
             payload = new uint8_t[size];
-            std::memset(payload, 0, size); // ADDED std::
+            std::memset(payload, 0, size);
         } else {
             payload = nullptr;
         }
     }
 
+    /**
+     * @brief Destructor that automatically frees the payload memory.
+     */
     ~NetworkPacket(){
         if (payload){
             delete[] payload;
@@ -83,12 +121,21 @@ public:
     NetworkPacket(const NetworkPacket&) = delete; 
     NetworkPacket& operator=(const NetworkPacket&) = delete; 
 
+    /**
+     * @brief Move constructor to safely transfer payload ownership.
+     * @param other The rvalue packet being moved from.
+     */
     NetworkPacket(NetworkPacket&& other) noexcept {
         header = other.header;       
         payload = other.payload;     
         other.payload = nullptr;     
     }
 
+    /**
+     * @brief Move assignment operator.
+     * @param other The rvalue packet being moved from.
+     * @return Reference to this newly assigned packet.
+     */
     NetworkPacket& operator=(NetworkPacket&& other) noexcept {
         if (this != &other) {
             delete[] payload;        
@@ -99,22 +146,43 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Retrieves the command ID of this packet.
+     * @return The Command enum value.
+     */
     Command getCommandID() const {
         return header.commandID;
     }
 
+    /**
+     * @brief Retrieves the expected size of the payload.
+     * @return The size in bytes.
+     */
     uint32_t getPayloadSize() const {
         return header.payloadSize;
     }
 
+    /**
+     * @brief Retrieves a read-only pointer to the payload data.
+     * @return A pointer to the raw byte buffer.
+     */
     const uint8_t* getPayload() const {
         return payload;
     }
     
+    /**
+     * @brief Retrieves the checksum associated with the payload.
+     * @return The 32-bit CRC.
+     */
     uint32_t getPayloadCrc() const {
         return header.payloadCRC;
     }
 
+    /**
+     * @brief Writes data into the packet's payload buffer and calculates the CRC.
+     * @param data Pointer to the raw bytes to copy.
+     * @param size The number of bytes to copy. Must not exceed the allocated payload size.
+     */
     void writePayload(const uint8_t* data, uint32_t size) {
         if (size > header.payloadSize) {
             std::cerr << "Error: Payload size exceeds allocated size\n";
@@ -122,11 +190,17 @@ public:
         }
         if (payload != nullptr && data != nullptr){
             std::memcpy(payload, data, size);
-            // FIXED: Now calculates CRC based on the total allocated payload size
             header.payloadCRC = calculateCRC32(payload, header.payloadSize); 
         }
     }
     
+    /**
+     * @brief Serializes the packet (header + payload) into a single byte array for network transmission.
+     * 
+     * Applies standard network byte order (endianness) to the header fields.
+     * 
+     * @return A vector of bytes representing the ready-to-send packet.
+     */
     std::vector<uint8_t> serialize() const {
         std::vector<uint8_t> buffer(sizeof(Header) + header.payloadSize);
         
@@ -143,6 +217,17 @@ public:
         return buffer;
     }
 
+    /**
+     * @brief Deserializes a received byte array into a NetworkPacket object.
+     * 
+     * Converts network byte order back to host byte order and allocates memory
+     * for the payload if one exists.
+     * 
+     * @param data Pointer to the raw incoming network buffer.
+     * @param totalSize The total number of bytes received in the buffer.
+     * @return A pointer to the dynamically allocated NetworkPacket. The caller is responsible for deleting it.
+     * @throw std::runtime_error If the data is too small to contain a header or full payload.
+     */
     static NetworkPacket* deserialize(const uint8_t* data, uint32_t totalSize) {
         if (totalSize < sizeof(Header)) {
             throw std::runtime_error("Data too small to contain header");

@@ -1,3 +1,9 @@
+/**
+ * @file server.cpp
+ * @brief Main entry point and core logic for the CTF TCP Server.
+ */
+
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -12,7 +18,21 @@
 #include <nlohmann/json.hpp>
 #include "packet.h"
 
-enum class ServerState { ONLINE, MAINTENANCE, OFFLINE };
+/**
+ * @brief Represents the current operational state of the server.
+ */
+enum class ServerState { 
+     ONLINE,    /**< Server is accepting normal client connections. */
+     MAINTENANCE, /**< Server is locked down; only admins can connect. */
+     OFFLINE }; /**< Server is shutting down. */
+
+
+/**
+ * @brief Core server application handling incoming CTF client connections.
+ * 
+ * This class manages the main TCP socket listener, handles database connections,
+ * and processes incoming NetworkPackets from connected clients in separate threads.
+ */
 
 class CTFServer {
 private:
@@ -173,8 +193,20 @@ private:
     }
 
 public:
+    /**
+     * @brief Constructs the CTF Server and loads database configurations.
+     */
     CTFServer() : listenFd(-1), serverState(ServerState::ONLINE) { loadDbConfig(); }
 
+    /**
+     * @brief Starts the server loop, binding to the specified port.
+     * 
+     * Initializes the socket, listens for incoming TCP connections, and 
+     * spins off a detached thread for every accepted client to handle
+     * packet parsing and commands.
+     * 
+     * @param port The port number to listen on (e.g., 8080).
+     */
     void start(int port) {
         listenFd = socket(AF_INET, SOCK_STREAM, 0);
         int opt = 1;
@@ -197,6 +229,15 @@ public:
     }
 };
 
+
+/**
+ * @brief Main entry point for the CTF backend server.
+ * 
+ * Instantiates the CTFServer class and starts listening on port 8080
+ * for incoming client commands.
+ * 
+ * @return Program exit status code (0 for success).
+ */
 int main() {
     CTFServer server;
     server.start(8080);
