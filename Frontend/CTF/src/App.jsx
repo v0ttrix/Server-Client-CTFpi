@@ -24,7 +24,7 @@ export default function App() {
           mask="fade-center"
           fill="#22c55e"
           size={40}
-          className="opacity-50"
+          className="opacity-80"
         />
       </div>
       <BrowserRouter>

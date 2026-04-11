@@ -3,8 +3,8 @@ import { Button } from "../components/Button";
 
 const Home = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 font-mono text-center relative overflow-hidden">
-      <div className="space-y-6 max-w-3xl">
+    <div className="min-h-[calc(100vh-70px)] flex flex-col items-center justify-center p-4 font-mono text-center">
+      <div className="space-y-6 max-w-3xl -mt-10 md:-mt-20">
         {/* Main Header */}
         <h1 className="text-5xl md:text-6xl font-bold text-green-500 tracking-widest uppercase mb-4">
           Capture The Flag

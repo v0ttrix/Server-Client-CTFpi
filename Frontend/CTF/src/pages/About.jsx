@@ -9,8 +9,8 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-[calc(100vh-70px)] bg-transparent text-gray-300 font-mono p-6 sm:p-12 mb-10 max-w-5xl mx-auto">
-      <div className="space-y-16">
+    <div className="min-h-[calc(100vh-70px)] bg-transparent text-gray-300 font-mono p-4 sm:p-8 max-w-5xl mx-auto flex flex-col justify-center py-10">
+      <div className="space-y-6 sm:space-y-8">
         {/* Project Section */}
         <section className="space-y-4">
           <h2 className="text-3xl font-bold text-green-500 uppercase tracking-widest border-b border-green-500/30 pb-2">
@@ -74,10 +74,10 @@ const About = () => {
             {teamMembers.map((member, index) => (
               <div
                 key={index}
-                className="bg-black/50 border border-green-500/20 p-6 rounded-lg text-center hover:border-green-500/60 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300"
+                className="bg-black/50 border border-green-500/20 p-4 rounded-lg text-center hover:border-green-500/60 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300"
               >
-                <div className="w-20 h-20 bg-neutral-800 rounded-full mx-auto mb-4 border-2 border-green-500/50 flex items-center justify-center overflow-hidden">
-                  <span className="text-3xl text-green-500/40">
+                <div className="w-16 h-16 bg-neutral-800 rounded-full mx-auto mb-2 border-2 border-green-500/50 flex items-center justify-center overflow-hidden">
+                  <span className="text-2xl text-green-500/40">
                     {index + 1}
                   </span>
                 </div>
