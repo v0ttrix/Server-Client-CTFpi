@@ -5,18 +5,20 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Challenges from "./pages/Challenges";
+import { Pointer } from "./components/magicui/pointer";
 
 function ProtectedRoute({ children }) {
-    const { isAuthenticated, isMaintenance } = useWebSocket();
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-    if (isMaintenance) return <Navigate to="/login" replace />;
-    return children;
+  const { isAuthenticated, isMaintenance } = useWebSocket();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isMaintenance) return <Navigate to="/login" replace />;
+  return children;
 }
 
 export default function App() {
   return (
     <WebSocketProvider>
       <BrowserRouter>
+        <Pointer className="text-green-500 fill-green-500" />
         <Routes>
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
