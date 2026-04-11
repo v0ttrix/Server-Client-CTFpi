@@ -52,14 +52,7 @@ export default function Login() {
       : "text-red-500";
 
   return (
-    <div className="min-h-screen bg-[#070707] flex items-center justify-center p-4 font-mono relative overflow-hidden">
-      <BGPattern
-        variant="dots"
-        mask="fade-center"
-        fill="#22c55e"
-        size={40}
-        className="opacity-50"
-      />
+    <div className="min-h-screen flex items-center justify-center p-4 font-mono relative overflow-hidden">
       <GlowCard
         glowColor="green"
         customSize={true}
