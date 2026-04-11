@@ -54,15 +54,12 @@ TEST(PacketTest, SerializeAndDeserialize) {
 ///
 
 // Test deserialization with invalid data
-TEST(PacketTest, DeserializeInvalidDataReturnsNull) {
+TEST(PacketTest, DeserializeInvalidDataThrowsException) {
     // Arrange: Create an invalid buffer (too small)
     std::vector<uint8_t> invalidBuffer = {0x01};
     
-    // Act: Attempt to deserialize
-    NetworkPacket* packet = NetworkPacket::deserialize(invalidBuffer.data(), invalidBuffer.size());
-    
-    // Assert: Should return nullptr due to invalid data
-    EXPECT_EQ(packet, nullptr);
+    // Assert: Should throw exception due to invalid data
+    EXPECT_THROW(NetworkPacket::deserialize(invalidBuffer.data(), invalidBuffer.size()), std::runtime_error);
 }
 
 // Test deserialization with mismatched payload size
@@ -75,7 +72,7 @@ TEST(PacketTest, DeserializeOnTruncatedPayload)
 }
 // Test CRC calculation on payload write
 TEST(PacketTest, CRCCalculateOnWrite){
-    NetworkPacket, packet(Command::LOGIN, 4);
+    NetworkPacket packet(Command::LOGIN, 4);
     EXPECT_EQ(packet.getPayloadCrc(), 0); // CRC should be 0 before writing payload
 
     const uint8_t data[] ="test";
@@ -107,7 +104,7 @@ TEST(PacketTest, DefaultConstructorInitializesCorrectly){
 
 TEST(PacketTest, HandlesZeroLengthPayload){
     NetworkPacket emptyPacket(Command::ACK, 0);
-    EXPECT_EQ(emptyPacket.getPayloadSize(), nullptr);
+    EXPECT_EQ(emptyPacket.getPayloadSize(), 0);
 
     std::vector<uint8_t> buffer = emptyPacket.serialize();
     NetworkPacket* deserialized = NetworkPacket::deserialize(buffer.data(), buffer.size());
@@ -129,19 +126,72 @@ TEST(PacketTest, WritePayloadPreventsBufferOverflow){
     for(int i = 0; i < 5; i++){
         EXPECT_EQ(payloadOut[i], 0); // Payload should remain unchanged (zeroed)
     }
+}
 
 TEST(PacketTest, MoveAssignmentTransfersOwnership){
     NetworkPacket original(Command::LOGIN, 8);
-    packet1.writepayload((const uint8_t*)"flagdata", 8);
-
+    original.writePayload((const uint8_t*)"flagdata", 8);
 
     NetworkPacket packet2(Command::NONE, 0);
-    packet2 = std::move(packet1);
+    packet2 = std::move(original);
 
     EXPECT_EQ(packet2.getCommandID(), Command::LOGIN);
     EXPECT_EQ(packet2.getPayloadSize(), 8);
     EXPECT_NE(packet2.getPayload(), nullptr);
 
+    EXPECT_EQ(original.getPayload(), nullptr); // Original should have released ownership
+}
+// Test that CRC is preserved through serialize/deserialize round-trip
+TEST(PacketTest, CRCPreservedThroughSerialization){
+    NetworkPacket original(Command::LOGIN, 4);
+    original.writePayload((const uint8_t*)"test", 4);
+    uint32_t originalCrc = original.getPayloadCrc();
 
-    EXPECT_EQ(p1.getPayload(), nullptr); // Original should have released ownership
+    std::vector<uint8_t> buffer = original.serialize();
+    NetworkPacket* deserialized = NetworkPacket::deserialize(buffer.data(), buffer.size());
+
+    EXPECT_EQ(deserialized->getPayloadCrc(), originalCrc); // CRC should survive round-trip
+
+    delete deserialized;
+}
+// Test that different payloads produce different CRC values
+TEST(PacketTest, DifferentPayloadsProduceDifferentCRC){
+    NetworkPacket packet1(Command::LOGIN, 4);
+    packet1.writePayload((const uint8_t*)"aaaa", 4);
+
+    NetworkPacket packet2(Command::LOGIN, 4);
+    packet2.writePayload((const uint8_t*)"bbbb", 4);
+
+    EXPECT_NE(packet1.getPayloadCrc(), packet2.getPayloadCrc()); // Different data = different CRC
+}
+// Test that all Command enum values survive serialization
+TEST(PacketTest, AllCommandTypesSerializeCorrectly){
+    Command commands[] = {Command::NONE, Command::LOGIN, Command::TOGGLE_MAINTENANCE,
+                          Command::SET_ONLINE, Command::REQUEST_FLAG_IMAGE,
+                          Command::ACK, Command::ERROR};
+
+    for (Command cmd : commands) {
+        NetworkPacket original(cmd, 0);
+        std::vector<uint8_t> buffer = original.serialize();
+        NetworkPacket* deserialized = NetworkPacket::deserialize(buffer.data(), buffer.size());
+
+        EXPECT_EQ(deserialized->getCommandID(), cmd);
+
+        delete deserialized;
+    }
+}
+// Test that move assignment into a packet with existing payload does not leak
+TEST(PacketTest, MoveAssignmentCleansUpExistingPayload){
+    NetworkPacket target(Command::ACK, 16);
+    target.writePayload((const uint8_t*)"existingpayload!", 16);
+
+    NetworkPacket source(Command::LOGIN, 4);
+    source.writePayload((const uint8_t*)"new!", 4);
+
+    target = std::move(source); // Should delete target's old 16-byte payload
+
+    EXPECT_EQ(target.getCommandID(), Command::LOGIN);
+    EXPECT_EQ(target.getPayloadSize(), 4);
+    EXPECT_EQ(std::memcmp(target.getPayload(), "new!", 4), 0);
+    EXPECT_EQ(source.getPayload(), nullptr);
 }
