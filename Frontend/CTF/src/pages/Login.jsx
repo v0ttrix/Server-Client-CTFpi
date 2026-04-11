@@ -19,15 +19,15 @@ export default function Login() {
     }, [isAuthenticated, navigate]);
 
     const status = isMaintenance
-        ? "🟡 Server Maintenance"
+        ? "Server Status: UNDER MAINTANANCE"
         : isConnected
-            ? "🟢 Server Connected"
-            : "🔴 Server Offline";
+            ? "Server Status: ONLINE"
+            : "Server Status: OFFLINE";
 
     return (
         <div style={{ padding: "20px" }}>
             <h2>CTF Login</h2>
-            <p>Status: {status}</p>
+            <p>{status}</p>
             <form onSubmit={handleLogin}>
                 <input placeholder="Username" onChange={e => setUsername(e.target.value)} required />
                 <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} required />
