@@ -4,7 +4,7 @@ import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
 
-const challengesData = [
+export const challengesData = [
   {
     id: 1,
     title: "Sanity Check",
@@ -87,7 +87,7 @@ const challengesData = [
   },
 ];
 
-const difficultyStyles = {
+export const difficultyStyles = {
   Easy: {
     text: "text-green-400",
     glow: "green",
@@ -113,6 +113,14 @@ export default function Challenges() {
   const navigate = useNavigate();
   const [flagImage, setFlagImage] = useState(null);
   const [status, setStatus] = useState("");
+  const [completed, setCompleted] = useState([]);
+
+  useEffect(() => {
+    const savedCompleted = JSON.parse(
+      localStorage.getItem("completedChallenges") || "[]",
+    );
+    setCompleted(savedCompleted);
+  }, []);
 
   useEffect(() => {
     if (lastMessage) {
@@ -164,16 +172,17 @@ export default function Challenges() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex flex-wrap justify-center gap-6">
         {challengesData.map((chal) => {
           const style = difficultyStyles[chal.difficulty];
+          const isCompleted = completed.includes(chal.id);
 
           return (
             <div
               key={chal.id}
               role="button"
               tabIndex={0}
-              className="group h-full"
+              className={`group w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] transition-all ${isCompleted ? "opacity-50 grayscale" : ""}`}
               onClick={() => navigate(`/challenges/${chal.id}`)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -188,8 +197,23 @@ export default function Challenges() {
               >
                 <div className="p-6 bg-black/60 rounded-2xl h-full flex flex-col z-10">
                   <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-bold text-white tracking-wide">
+                    <h2 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
                       {chal.title}
+                      {isCompleted && (
+                        <svg
+                          className="w-5 h-5 text-green-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
                     </h2>
                     <span
                       className={`text-[10px] font-bold px-2 py-1 rounded border ${style.text} ${style.bg} ${style.border} uppercase tracking-wider`}

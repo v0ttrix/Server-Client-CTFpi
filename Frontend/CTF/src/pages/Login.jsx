@@ -57,7 +57,7 @@ export default function Login() {
         customSize={true}
         className="w-full max-w-md p-0! grid-rows-1! relative z-10"
       >
-        <div className="bg-neutral-900/60 p-10 px-12 rounded-2xl w-full h-full relative z-10">
+        <div className="bg-black/60 p-10 px-12 rounded-2xl w-full h-full relative z-10">
           <div className="space-y-4">
             <div className="text-center space-y-2">
               <h2 className="text-4xl font-bold text-green-500 tracking-widest uppercase">

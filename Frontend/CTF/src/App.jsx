@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Challenges from "./pages/Challenges";
+import ChallengeDetail from "./pages/ChallengeDetail";
 import { Pointer } from "./components/magicui/pointer";
 import { BGPattern } from "./components/magicui/bg-pattern";
 
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/challenges/:id" element={<ChallengeDetail />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
           {/* <Route
             path="*"
