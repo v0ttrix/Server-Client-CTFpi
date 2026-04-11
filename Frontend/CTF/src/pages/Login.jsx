@@ -56,8 +56,8 @@ export default function Login() {
         variant="dots"
         mask="fade-center"
         fill="#22c55e"
-        size={24}
-        className="opacity-20"
+        size={40}
+        className="opacity-50"
       />
       <GlowCard
         glowColor="green"
