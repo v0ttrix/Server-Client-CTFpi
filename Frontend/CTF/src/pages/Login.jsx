@@ -4,16 +4,23 @@ import { useWebSocket } from "../api/WebSocket";
 import { Command } from "../api/client";
 import { GlowCard } from "../components/magicui/glow-card";
 import { BGPattern } from "../components/magicui/bg-pattern";
+import { motion } from "motion/react";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [shake, setShake] = useState(false);
   const navigate = useNavigate();
   const { isConnected, isAuthenticated, isMaintenance, sendCmd } =
     useWebSocket();
 
   const handleLogin = (e) => {
     e.preventDefault();
+    if (!isConnected || isMaintenance) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
     sendCmd(Command.LOGIN, `${username}:${password}`);
   };
 
@@ -55,9 +62,13 @@ export default function Login() {
               </h2>
               <p className="text-sm text-gray-200">
                 System Status:{" "}
-                <span className={`font-semibold ${statusColor}`}>
+                <motion.span
+                  className={`inline-block font-semibold ${statusColor}`}
+                  animate={shake ? { x: [-10, 10, -8, 8, -5, 5, 0] } : { x: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
                   {statusText}
-                </span>
+                </motion.span>
               </p>
             </div>
             <form onSubmit={handleLogin} className="space-y-6">
@@ -77,9 +88,8 @@ export default function Login() {
                 />
               </div>
               <button
-                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-medium text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:text-white hover:-translate-y-1.75 active:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-[0px_8px_15px_rgba(0,0,0,0.1)] disabled:hover:text-black disabled:hover:translate-y-0"
+                className="w-full mt-6 py-[1.3em] px-[3em] text-[12px] uppercase tracking-[2.5px] font-medium text-black bg-white border-none rounded-[45px] shadow-[0px_8px_15px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out cursor-pointer outline-none hover:bg-green-500 hover:shadow-[0px_15px_20px_rgba(46,229,157,0.4)] hover:text-white hover:-translate-y-[7px] active:-translate-y-[1px]"
                 type="submit"
-                disabled={!isConnected || isMaintenance}
               >
                 Access Terminal
               </button>
