@@ -49,8 +49,10 @@ export function WebSocketProvider({ children }) {
         }
     };
 
+    const logout = () => setIsAuthenticated(false);
+
     return (
-        <WebSocketContext.Provider value={{ isConnected, isAuthenticated, isMaintenance, sendCmd, lastMessage }}>
+        <WebSocketContext.Provider value={{ isConnected, isAuthenticated, isMaintenance, sendCmd, lastMessage, logout }}>
             {children}
         </WebSocketContext.Provider>
     );
