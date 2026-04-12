@@ -86,6 +86,19 @@ sudo systemctl start ctf
 sudo systemctl status ctf
 ```
 
+## Tests
+
+```bash
+# Backend (packet tests)
+cd Backend/build && cmake .. && make && ctest
+
+# Frontend
+cd Frontend/CTF && npm test
+
+# Middleware
+cd Middleware && node system_tests.js
+```
+
 ## Team
 
 - Jaden Mardini
