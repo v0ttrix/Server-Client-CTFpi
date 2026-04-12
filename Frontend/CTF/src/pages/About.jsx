@@ -6,10 +6,10 @@ const About = () => {
   }, []);
 
   const teamMembers = [
-    { name: "Team Member 1", role: "Developer" },
-    { name: "Team Member 2", role: "Developer" },
-    { name: "Team Member 3", role: "Developer" },
-    { name: "Team Member 4", role: "Developer" },
+    { name: "Jaden Mardini", role: "Developer", img: "/img1.png" },
+    { name: "Ahmed Somaan", role: "Developer", img: "/img2.png" },
+    { name: "Michael Thomson", role: "Developer", img: "/img3.jpg" },
+    { name: "Mohamed Al-Husainawi", role: "Developer", img: "/img4.png" },
   ];
 
   return (
@@ -81,9 +81,7 @@ const About = () => {
                 className="bg-black/50 border border-green-500/20 p-4 rounded-lg text-center hover:border-green-500/60 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300"
               >
                 <div className="w-16 h-16 bg-neutral-800 rounded-full mx-auto mb-2 border-2 border-green-500/50 flex items-center justify-center overflow-hidden">
-                  <span className="text-2xl text-green-500/40">
-                    {index + 1}
-                  </span>
+                  <img src={member.img} alt={member.name} className="w-full h-full object-cover" />
                 </div>
                 <h3 className="text-green-400 font-bold uppercase tracking-wider">
                   {member.name}

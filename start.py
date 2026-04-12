@@ -1,4 +1,22 @@
 import subprocess, signal, sys, os, time
+import lgpio
+
+# Force-release all GPIO pins used by this app
+try:
+    h = lgpio.gpiochip_open(0)
+    for pin in [17, 24, 16, 26, 23]:
+        try:
+            lgpio.gpio_claim_output(h, pin, 0)
+            lgpio.gpio_write(h, pin, 0)
+            lgpio.gpio_free(h, pin)
+        except:
+            pass
+    lgpio.gpiochip_close(h)
+except:
+    pass
+
+time.sleep(0.5)
+
 from gpiozero import LED
 
 BASE = os.path.expanduser("~/Server-Client-CTFpi")
