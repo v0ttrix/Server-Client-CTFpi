@@ -7,7 +7,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background: linear-gradient(#0A0A0A, #101010);
+  background: linear-gradient(#0a0a0a, #101010);
   min-height: 100vh;
 
   font-synthesis: none;
@@ -20,8 +20,7 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  cursor: none !important;
 }
 
 html {
