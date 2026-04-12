@@ -70,7 +70,7 @@ export function Pointer({ children, className, ...props }) {
 
   return (
     <motion.div
-      className={cn("pointer-events-none fixed left-0 top-0 z-50", className)}
+      className={cn("pointer-events-none fixed left-0 top-0 z-[9999]", className)}
       style={{
         transform,
         opacity: isVisible ? 1 : 0,
