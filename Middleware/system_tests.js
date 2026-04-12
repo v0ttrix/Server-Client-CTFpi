@@ -71,6 +71,29 @@ function sendAndReceive(packet, timeout = 3000) {
     });
 }
 
+// Helper: send on an existing socket and wait for a full response
+function sendOnSocket(client, packet, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { reject(new Error('Timeout')); }, timeout);
+        let receiveBuffer = Buffer.alloc(0);
+
+        const onData = (data) => {
+            receiveBuffer = Buffer.concat([receiveBuffer, data]);
+            if (receiveBuffer.length >= HEADER_SIZE) {
+                const payloadSize = receiveBuffer.readUInt32BE(4);
+                if (receiveBuffer.length >= HEADER_SIZE + payloadSize) {
+                    clearTimeout(timer);
+                    client.removeListener('data', onData);
+                    resolve(receiveBuffer);
+                }
+            }
+        };
+
+        client.on('data', onData);
+        client.write(packet);
+    });
+}
+
 // Helper: just connect, no send
 function connectOnly(timeout = 2000) {
     return new Promise((resolve, reject) => {
@@ -114,24 +137,21 @@ describe('Backend System Tests', () => {
         assert.ok(response.command === Command.ACK || response.command === Command.ERROR);
     });
 
-    // Test 5: TOGGLE_MAINTENANCE returns an ACK
+    // Test 5: TOGGLE_MAINTENANCE returns an ACK (must login first on same connection)
     it('should respond to TOGGLE_MAINTENANCE with an ACK', async () => {
-        // Login first
-        const login = buildPacket(Command.LOGIN, 'admin:admin');
-        await sendAndReceive(login);
-
-        const packet = buildPacket(Command.TOGGLE_MAINTENANCE, '');
-        const response = parsePacket(await sendAndReceive(packet));
+        const client = await connectOnly();
+        await sendOnSocket(client, buildPacket(Command.LOGIN, 'admin:admin'));
+        const response = parsePacket(await sendOnSocket(client, buildPacket(Command.TOGGLE_MAINTENANCE, '')));
+        client.destroy();
         assert.strictEqual(response.command, Command.ACK);
     });
 
-    // Test 6: REQUEST_FLAG_IMAGE returns a large payload
+    // Test 6: REQUEST_FLAG_IMAGE returns a large payload (must login first on same connection)
     it('should return a large payload for REQUEST_FLAG_IMAGE', async () => {
-        const login = buildPacket(Command.LOGIN, 'admin:admin');
-        await sendAndReceive(login);
-
-        const packet = buildPacket(Command.REQUEST_FLAG_IMAGE, '');
-        const response = parsePacket(await sendAndReceive(packet, 10000));
+        const client = await connectOnly();
+        await sendOnSocket(client, buildPacket(Command.LOGIN, 'admin:admin'));
+        const response = parsePacket(await sendOnSocket(client, buildPacket(Command.REQUEST_FLAG_IMAGE, '')));
+        client.destroy();
         assert.ok(response.payloadSize > 5000, `Expected large payload, got ${response.payloadSize} bytes`);
     });
 
