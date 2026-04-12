@@ -1,12 +1,14 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useWebSocket } from "../api/WebSocket";
 import { motion } from "motion/react";
 
 const Header = () => {
   const navigate = useNavigate();
+  const { logout } = useWebSocket();
 
   const handleLogout = () => {
-    // You can wire up your actual logout context clearing here in the future
+    logout();
     navigate("/login");
   };
 
