@@ -86,6 +86,20 @@ sudo systemctl start ctf
 sudo systemctl status ctf
 ```
 
+## Doxygen
+
+```bash
+doxygen Doxyfile
+xdg-open "output doxygen/html/index.html"
+```
+
+## Doxygen
+
+```bash
+doxygen Doxyfile
+xdg-open "output doxygen/html/index.html"
+```
+
 ## Tests
 
 ```bash
